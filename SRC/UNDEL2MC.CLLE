@@ -1,0 +1,71 @@
+/*  Module: UNDEL2MC - Handles msg's                                */
+
+             PGM        PARM(&OP &MSG &MSGID &MSGDTA &MSGKEY &PGM)
+             DCL        VAR(&OP) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(512)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MSGKEY) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10) VALUE(UNDEL2MF)
+
+             IF         COND(&OP *EQ 'MSGF    ') THEN(GOTO OPMSGF)
+             IF         COND(&OP *EQ 'MSG     ') THEN(GOTO OPMSG)
+             IF         COND(&OP *EQ 'GETMSG  ') THEN(GOTO OPGETMSG)
+             IF         COND(&OP *EQ 'INFO    ') THEN(GOTO OPINFO)
+             IF         COND(&OP *EQ 'ESCP    ') THEN(GOTO OPESCP)
+             IF         COND(&OP *EQ 'RCVMSG  ') THEN(GOTO OPRCVMSG)
+             IF         COND(&OP *EQ 'RCV-RMV ') THEN(GOTO OPRCVRMV)
+             IF         COND(&OP *EQ 'RMVALL  ') THEN(GOTO OPRMVALL)
+             GOTO       CMDLBL(ENDPGM)
+/*-------------------------------------------------------------------*/
+OPMSGF:
+/*  OP=MSGF - write msg from msgf to caller's msgq                   */
+             SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGF) MSGDTA(&MSGDTA) +
+                          KEYVAR(&MSGKEY)
+             GOTO       CMDLBL(ENDPGM)
+/*-------------------------------------------------------------------*/
+OPMSG:
+/*  OP=MSG - write impromptu msg to caller's msgq                    */
+             SNDPGMMSG  MSG(&MSG) KEYVAR(&MSGKEY)
+             GOTO       CMDLBL(ENDPGM)
+/*-------------------------------------------------------------------*/
+OPGETMSG:
+/*  OP=GETMSG - get msg text from a msg in caller's msgq             */
+             RCVMSG     PGMQ(*PRV) MSGKEY(&MSGKEY) RMV(*NO) MSG(&MSG)
+             GOTO       CMDLBL(ENDPGM)
+/*-------------------------------------------------------------------*/
+OPINFO:
+/*  OP=INFO - send an info msg to a previous msgq                    */
+             SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGF) MSGDTA(&MSGDTA) +
+                          TOPGMQ(*PRV &PGM) MSGTYPE(*INFO)
+             GOTO       CMDLBL(ENDPGM)
+/*-------------------------------------------------------------------*/
+OPESCP:
+/*  OP=ESCP - send an ESCAPE msg to a previous msgq                  */
+             SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGF) MSGDTA(&MSGDTA) +
+                          TOPGMQ(*PRV &PGM) MSGTYPE(*ESCAPE)
+             GOTO       CMDLBL(ENDPGM)
+/*-------------------------------------------------------------------*/
+OPRCVMSG:
+/*  OP=RCVMSG - rcv msg from caller's msgq                           */
+             RCVMSG     PGMQ(*PRV) MSGKEY(&MSGKEY) RMV(*NO) MSG(&MSG)
+             GOTO       CMDLBL(ENDPGM)
+/*-------------------------------------------------------------------*/
+OPRCVRMV:
+/*  OP=RCV-RMV - receive & remove a msg from caller's msgq           */
+             RCVMSG     PGMQ(*PRV *)
+             GOTO       CMDLBL(ENDPGM)
+/*-------------------------------------------------------------------*/
+OPRCVKY:
+/*  OP=RCVMSGKY - rcv a msg & get its msg key                        */
+             RCVMSG     PGMQ(*PRV *) RMV(*NO) KEYVAR(&MSGKEY)
+             GOTO       CMDLBL(ENDPGM)
+/*-------------------------------------------------------------------*/
+OPRMVALL:
+/*  OP=RMVALL - rcv all of caller's msgs                             */
+             RMVMSG     PGMQ(*PRV *) CLEAR(*ALL)
+             GOTO       CMDLBL(ENDPGM)
+/*-------------------------------------------------------------------*/
+ENDPGM:
+             ENDPGM

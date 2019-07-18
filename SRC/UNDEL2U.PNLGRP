@@ -1,0 +1,242 @@
+.**********************************************************************
+.*  Member:       UNDEL2U.
+.*  Function:     Panel group source for the UNDEL2 command.
+.**********************************************************************
+:PNLGRP.
+:HELP name='UNDEL2'.
+:P.
+The Un-delete Record command allows you to view, copy and un-delete deleted
+records in a physical file.  You can interactively display active and deleted
+records, scan for deleted records and un-delete them.  In addition, you can
+copy records to print or to an outfile or un-delete them without displaying
+them.
+:P.
+After records are un-deleted, they will contain the data they contained at the
+time they were deleted.
+:NT.
+Deleted records & their data actually exist in the file, but with a bit set to
+indicate they are deleted.  OS/400 will
+:HP1.NEVER:EHP1.
+retrieve the data from deleted records.  Only UNDEL2 will.
+:ENT.
+:EHELP.
+
+:HELP name='UNDEL2/FILE'.
+File (FILE) - Help
+:XH3.File (FILE)
+:P.
+Specifies the name and library of the physical file.
+:P.
+The possible library values are:
+:PARML.
+:PT.:PK def.*LIBL:EPK.
+:PD.The library list is used to locate the file.
+:PT.*CURLIB
+:PD.The current library for the job is used to locate the file.  If no library
+is specified as the current library for the job, QGPL is used.
+:PT.library-name
+:PD.Specify the library where the file is located.
+:EPARML.
+:EHELP.
+
+:HELP name='UNDEL2/MBR'.
+Member (MBR) - Help
+:XH3.Member (MBR)
+:P.
+Specifies the name of the physical file member.
+:PARML.
+:PT.:PK def.*FIRST:EPK.
+:PD.The first (earliest created) member of the specified file is used.
+:PT.member-name
+:PD.Specify the name of the file member.
+:EPARML.
+:EHELP.
+
+:HELP name='UNDEL2/RCDNBR'.
+Record number (RCDNBR) - Help
+:XH3.Record number (RCDNBR)
+:P.
+Specifies the relative record number of the record.
+:EHELP.
+
+:HELP name='UNDEL2/ACTION'.
+Action (ACTION) - Help
+:XH3.Action (ACTION)
+:P.
+Specifies what is to be done to the record.
+:P.
+The possible values are:
+:PARML.
+:PT.:PK def.*RTV:EPK.
+:PD.Data from the record is retrieved, to a location specified by the OUTPUT
+parameter.  The original record is not modified.
+:PT.*UPD
+:PD.The record is un-deleted.  It will contain the data it had when it was
+deleted.
+:EPARML.
+:NT.
+The OUTPUT parameter may be specified only if this parameter is entered or
+defaulted as *RTV.
+:ENT.
+:EHELP.
+
+:HELP name='UNDEL2/LOCK'.
+Lock member (LOCK) - Help
+:XH3.Lock member (LOCK)
+:P.
+Specifies whether to lock the member while copying records from it.
+:P.
+The possible values are:
+:PARML.
+:PT.:PK def.*YES:EPK.
+:PD.The member will be locked with an *EXCLRD lock.  If another job holds
+a *SHRNUP, *SHRUPD, *EXCLRD or *EXCL member data lock, a window will pop up
+and an option will be presented to display the locks.
+:PT.*NO
+:PD.The member will not be locked.  No indication will be given if another
+job holds a lock on the member.
+:EPARML.
+:NT.
+If another job holds a member data lock while UNDEL2 copies records to
+a QTEMP work file, fields in deleted records will be set to default
+values (e.g. blanks or zeros).  The lock could be held by a job that
+has the file open for update.  This will prevent UNDEL2 from retrieving
+the data from deleted records.
+:P.
+When locks exist, the CPYF command uses 'row copy', in which each record
+(row) is copied separately, and deleted records are set to defaults.  If
+no lock exists, CPYF uses 'fast copy', in which data is copied in chunks,
+without examining or changing deleted records.
+:P.
+If it is not feasible to wait for locks to be released, you might use the
+BAKFILE parameter to retrieve deleted records from a backup file which is
+not locked.
+:P.
+You might use LOCK(*NO) if you are only interested in which records are
+deleted -- not their data.
+:ENT.
+:EHELP.
+
+:HELP name='UNDEL2/BAKFILE'.
+Backup file (BAKFILE) - Help
+:XH3.Backup file (BAKFILE)
+:P.
+Specifies the name and library of a physical file from which to retrieve
+deleted records.  You could do this if the subject file (FILE parameter) is
+locked by another job, causing fields in deleted records to be retrieved with
+default values (see the note for the LOCK parameter).  It is assumed that
+the backup file is not locked.
+:P.
+The backup file must have the same record format as the subject file, and
+matching records must be at the same RRN (Relative Record Number) as in the
+subject file.
+:P.
+When a backup file is used, data for a deleted record in the subject file
+is retrieved from the record at the same RRN in the backup file.  The
+backup record may be active or deleted.
+:P.
+When F23 is used to un-delete, only the record in the subject file is
+un-deleted.  The backup file is not altered.
+:P.
+The possible library values are:
+:PARML.
+:PT.:PK def.*LIBL:EPK.
+:PD.The library list is used to locate the file.
+:PT.*CURLIB
+:PD.The current library for the job is used to locate the file.  If no library
+is specified as the current library for the job, QGPL is used.
+:PT.library-name
+:PD.Specify the library where the file is located.
+:EPARML.
+:EHELP.
+
+:HELP name='UNDEL2/BAKMBR'.
+Backup file member (BAKMBR) - Help
+:XH3.Backup file member (BAKMBR)
+:P.
+Specifies the name of the physical file member in the backup file.
+:PARML.
+:PT.:PK def.*FILEMBR:EPK.
+:PD.The file member name (MBR parameter) is used.
+:PT.*FIRST
+:PD.The first (earliest created) member of the specified file is used.
+:PT.member-name
+:PD.Specify the name of the file member.
+:EPARML.
+:EHELP.
+
+:HELP name='UNDEL2/OUTPUT'.
+Output (OUTPUT) - Help
+:XH3.Output (OUTPUT)
+:P.
+Specifies where the output from the command is sent.
+:NT.
+This parameter may be specified only if the ACTION parameter is entered or
+defaulted as *RTV.
+:ENT.
+:P.
+The possible values are:
+:PARML.
+:PT.:PK def.*:EPK.
+:PD.The output is displayed (if requested by an interactive job) or printed
+with the job's spooled output (if requested by a batch job).
+:PT.*PRINT
+:PD.The output is printed with the job's spooled output.
+:PT.*OUTFILE
+:PD.The output is directed to the database file specified on the File to
+receive output prompt (OUTFILE parameter).
+:EPARML.
+:EHELP.
+
+:HELP name='UNDEL2/OUTFILE'.
+File to receive output (OUTFILE) - Help
+:XH3.File to receive output (OUTFILE)
+:P.
+Specifies the name and library of the database file to which the output of
+the command is directed.  If the file does not exist, this command creates
+a physical file in the specified library.  If the file exists, its 13-character
+format level identifier must match the original file.
+:P.
+The possible library values are:
+:PARML.
+:PT.:PK def.*LIBL:EPK.
+:PD.The library list is used to locate the file.  If the file is not found,
+one is created in the current library.  If no current library exists, the
+file is created in the QGPL library.
+:PT.*CURLIB
+:PD.The current library for the job is used to locate the file.  If no library
+is specified as the current library for the job, QGPL is used.
+:PT.library-name
+:PD.Specify the library where the file is located.
+:EPARML.
+:EHELP.
+
+:HELP name='UNDEL2/OUTMBR'.
+Output member options (OUTMBR) - Help
+:XH3.Output member options (OUTMBR)
+:P.
+Specifies the name of the database file member to which the output of the
+command is directed.
+:P.
+The possible name values are:
+:PARML.
+:PT.:PK def.*FIRST:EPK.
+:PD.The first (earliest created) member in the file receives the output.  If it
+does not exist, the system creates a member with the name of the file specified
+in the File to receive output prompt (OUTFILE parameter).
+:PT.member-name
+:PD.Specify the name of the file member that receives the output.  If it does
+not exist, the system creates it.
+:EPARML.
+:P.
+The possible values for how information is stored are:
+:PARML.
+:PT.:PK def.*REPLACE:EPK.
+:PD.Existing records in the specified file member are replaced by the output
+data.
+:PT.*ADD
+:PD.Existing records in the specified file member are not replaced.  The output
+data is added to them.
+:EPARML.
+:EHELP.
+:EPNLGRP.

@@ -1,0 +1,34 @@
+2007/11/14  2.0.4
+- Add LOCK parm to UNDEL2 command to detect locks.
+- Add window to warn of locks, and screen to display locks.
+- Add BAKFILE & BAKMBR parms to UNDEL2 command to retrieve deleted
+  records from a backup file, in case locks cause deleted records
+  to have default field values.
+- Include source for UNALL pgm to delete all records in a file.
+- Eliminate 1 & 8-byte integers, %rem function & 'for' opcode (added to
+  RPGLE in V4R4M0).
+- In QUSRMBRD API, use old signed fields for # active & # deleted recs if
+  unsigned fields are zero (unsigned fields were added in V4R5M0).
+- In UNDELM2, change sRec, tRec, recwk & recwkb from 32768 to 32767.
+- Add error handling for delfile in UNDELM2.
+- Detect whether UNDELM2 is called by UNDEL2R.  If not (e.g. by WRKDBF)
+  process only 1st 120 bytes of mparms DS.
+- Put msg data in TOL0014 'Un-delete pending' msg.
+- Add &DEBUG and &TGTRLS to CRTUNDEL2.
+- In UNDELM2, eliminate calling UNDELM.
+
+2007/05/10  2.0.3
+- Instead of CPYF CRTFILE(*YES), do CRTPF.  CPYF with a unique index
+  causes fields in deleted records to be set to default values.
+- Add OUTPUT(*NONE) to SAVOBJ, in case default has been changed.
+
+2006/11/13  2.0.2
+- Fix F19=Prior deleted rec and F20=Next deleted rec.
+- In UNDEL2A *DTAARA, change:
+    @shlim     to 1000 instead of 100
+    @rcds2cpy  to 1000 instead of 20
+- Fix limitation on number of records scanned to equal @shlim in UNDEL2A,
+  instead of 1 greater.
+
+2006/01/18  2.0.1
+- Initial version 2 release.

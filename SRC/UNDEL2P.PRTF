@@ -1,0 +1,32 @@
+      *----------------
+     A          R UNDELPR1
+     A            DVERS          8A     6  2
+     A                                  6 32'Un-delete Record'
+     A            SYSNAM        10A     6 72
+     A                                  6 84'Page'
+     A                                  6 88PAGNBR EDTCDE(3)
+     A                                  7 62DATE
+     A                                      EDTCDE(Y)
+     A                                  7 72TIME
+     A                                  8  2'Physical file:'
+     A            DFILE         10A     8 17
+     A                                  8 31'RRN:'
+     A            DRRN           9S 0   8 36EDTCDE(2)
+     A            DSTAT          7      8 49
+     A            BLABEL         7      8 61
+     A            BSTAT          7      8 69
+     A                                  9  2'      Library:'
+     A            DLIBR         10A     9 17
+     A            DACTRC         9S 0   9 36EDTCDE(1)
+     A                                  9 49'Active recs'
+     A                                 10  9'Member:'
+     A            DMBR          10A    10 17
+     A            DDELRC         9S 0  10 36EDTCDE(1)
+     A                                 10 49'Deleted recs'
+     A                                 12 24'1...+...10....+...20....+...30....-
+     A                                      +...40....+...50'
+      *----------------
+     A          R UNDELPR2                  SPACEB(1)
+     A            DPOS           5S 0     15EDTCDE(1)
+     A            DDATA         52A       23
+      *----------------

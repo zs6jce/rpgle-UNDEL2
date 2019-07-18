@@ -1,0 +1,298 @@
+.**********************************************************************
+.*  Member:       UNDEL2DU.
+.*  Function:     Panel group source for pgm UNDEL2R.
+.**********************************************************************
+:PNLGRP.
+
+:HELP name='UNDELR/HELP'.
+:P.
+The Un-delete Record command allows you to view, copy and un-delete deleted
+records in a physical file.  You can interactively display active and deleted
+records, scan for deleted records and un-delete them.  In addition, you can
+copy records to print or to an outfile or un-delete them without displaying
+them.
+:P.
+After records are un-deleted, they will contain the data they contained at the
+time they were deleted.
+:NT.
+Deleted records & their data actually exist in the file, but with a bit set to
+indicate they are deleted.  OS/400 will
+:HP1.NEVER:EHP1.
+retrieve the data from deleted records.  Only UNDEL2 will.
+:ENT.
+:EHELP.
+
+:HELP name='UNDELR/FILE'.
+Physical file - Help
+:XH3.Physical file
+:P.
+Specifies the name of the physical file.
+:EHELP.
+
+:HELP name='UNDELR/LIBRARY'.
+Library - Help
+:XH3.Library
+:P.
+Specifies the library of the physical file.  Choose from the following:
+:PARML.
+:PT.*LIBL
+:PD.The library list is used to locate the file.
+:PT.*CURLIB
+:PD.The current library for the job is used to locate the file.  If no library
+is specified as the current library for the job, QGPL is used.
+:PT.library-name
+:PD.Specify the library where the file is located.
+:EPARML.
+:EHELP.
+
+:HELP name='UNDELR/MBR'.
+Member - Help
+:XH3.Member
+:P.
+Specifies the member of the physical file.  Choose from the following:
+:PARML.
+:PT.*FIRST
+:PD.The first (earliest created) member of the specified file is used.
+:PT.member-name
+:PD.Specify the name of the file member.
+:EPARML.
+:EHELP.
+
+:HELP name='UNDELR/RRN'.
+Relative record number - Help
+:XH3.Relative record number
+:P.
+Specifies the relative record number of the record.  To display the last record
+in the member, enter a very large number.
+:EHELP.
+
+:HELP name='UNDELR/STATUS'.
+Record status - Help
+:XH3.Record status
+:P.
+The current status of the record:
+:DL COMPACT.
+:DT.ACTIVE
+:DD.The record is active (non-deleted)
+:DT.DELETED
+:DD.The record is deleted.  You can un-delete it with F23.
+:EDL.
+:EHELP.
+
+:HELP name='UNDELR/BAKSTAT'.
+Backup record status - Help
+:XH3.Backup record status
+:P.
+The current status of the record in the backup file.  When this status is
+displayed, it indicates that the record was retrieved from the backup file.
+:DL COMPACT.
+:DT.ACTIVE
+:DD.The record is active (non-deleted)
+:DT.DELETED
+:DD.The record is deleted.
+:EDL.
+:EHELP.
+
+:HELP name='UNDELR/ACTRECS'.
+Active recs - Help
+:XH3.Active recs
+:P.
+The number of active (non-deleted) records in the member.
+:EHELP.
+
+:HELP name='UNDELR/DELRECS'.
+Deleted recs - Help
+:XH3.Deleted recs
+:P.
+The number of deleted records in the member.
+:EHELP.
+
+:HELP name='UNDELR/POSIT'.
+Position to - Help
+:XH3.Position to
+:P.
+Enter the byte position in the record of the data to be displayed on the top
+line.
+:EHELP.
+
+:HELP name='UNDELR/DATA'.
+Data - Help
+:XH3.Data
+:P.
+Data from the record is displayed as raw characters.  Non-character data, such
+as packed numeric fields, will appear as random graphical characters.
+:P.
+50 characters are displayed per line.  If the record length is longer than what
+will fit on a screen, "More..." appears at the bottom right.  You may use the
+roll keys to move through the record; or enter a number in the "Position to"
+field.
+:P.
+:EHELP.
+
+:HELP name='UNDELR/FKEYS'.
+Function keys - Help
+:XH3.Function keys
+:PARML.
+:PT.F3=Exit
+:PD.Returns from the Un-delete Record screen.
+:PT.F19=Prior deleted rec
+:PD.Scans backward (towards lower RRN's) for a deleted record.
+:PT.F20=Next deleted rec
+:PD.Scans forward (towards higher RRN's) for a deleted record.
+:NT.
+The maximum number of records to scan at a time is retrieved from the data area
+UNDEL2A.  It is a binary number in positions 1 - 4.
+:ENT.
+:PT.F23=Un-delete
+:PD.Re-activates the record, if deleted.  You will be prompted to press F23
+a second time to confirm the un-delete.
+:PT.Roll-up
+:PD.Moves forward through the record, if the record is too long to fit on one
+screen.  When the last position of the record is displayed, Roll-up moves to
+the next record.
+:PT.Roll-down
+:PD.Moves backward through the record, if the record is too long to fit on one
+screen.  When the first position of the record is displayed, Roll-down moves
+to the previous record.
+:EPARML.
+:EHELP.
+
+:HELP name='UNDELR/LOCKED'.
+:P.
+This window indicates that another job holds a lock on the member, which
+prevents UNDEL2 from retrieving data from deleted records.  To allow
+data to be retrieved, you can do one of the following:
+:OL.
+:LI.
+Wait for the lock to be released and re-enter the UNDEL2 command.
+:LI.
+If you have a backup copy of the file containing the desired records
+(either deleted or active), you can use the BAKFILE parameter on the UNDEL2
+command.  That will retrieve the deleted records from the backup file.
+When you use F23 to un-delete, records in the subject file will be un-deleted
+using data from the backup file.  See helptext in the UNDEL2 command.
+:EOL.
+:EHELP.
+
+:HELP name='UNDELR/LKFKYS'.
+Function keys - Help
+:XH3.Function keys
+:PARML.
+:PT.F6=Display locks
+:PD.Displays member locks on another screen.
+:PT.F12=Cancel
+:PD.Returns to the previous screen.
+:EPARML.
+:EHELP.
+
+:HELP name='UNDELR/C2HELP'.
+:P.
+The Display Data Locks display shows all the member data locks in the system
+for the specified physical file member.
+:P.
+If there are *SHRNUP, *SHRUPD, *EXCLRD or *EXCL locks, UNDEL2 will be
+prevented from retrieving data from deleted records -- fields will contain
+default values (e.g. blanks or zeros).
+:NT.
+If a job has the file open for update, it will hold a *SHRUPD member data
+lock.
+:ENT.
+:P.
+To allow data to be retrieved, you can do one of the following:
+:OL.
+:LI.
+Wait for the locks to be released and re-enter the UNDEL2 command.
+:LI.
+If you have a backup copy of the file containing the desired records
+(either deleted or active), you can use the BAKFILE parameter on the UNDEL2
+command.  That will retrieve the deleted records from the backup file.
+When you use F23 to un-delete, records in the subject file will be un-deleted
+using data from the backup file.  See helptext in the UNDEL2 command.
+:EOL.
+:EHELP.
+
+:HELP name='UNDELR/C2FILE'.
+Physical file - Help
+:XH3.Physical file
+:P.
+The name of the physical file whose locks you are viewing.
+:EHELP.
+
+:HELP name='UNDELR/C2LIBR'.
+Library - Help
+:XH3.Library
+:P.
+The name of the library where the file is located.
+:EHELP.
+
+:HELP name='UNDELR/C2MBR'.
+Member - Help
+:XH3.Member
+:P.
+The name of the member for which the lock was requested.
+:EHELP.
+
+:HELP name='UNDELR/C2OPT'.
+Option - Help
+:XH3.Option
+:P.
+Type the number of the option you want.
+:PARML.
+:PT.5=Work with job
+:PD.Use this option to run the Work with Job (WRKJOB) command.
+:PT.8=Work with locks
+:PD.Use this option to display the locks being held for the job.
+:PT.9=Display open files
+:PD.Use this option to display open files for the job.
+:EPARML.
+:EHELP.
+
+:HELP name='UNDELR/C2JOB'.
+Job - Help
+:XH3.Job
+:P.
+The name of the job that issued the lock request.
+:EHELP.
+
+:HELP name='UNDELR/C2USER'.
+User - Help
+:XH3.User
+:P.
+The user name of the job that issued the lock request.
+:EHELP.
+
+:HELP name='UNDELR/C2NUM'.
+Number - Help
+:XH3.Number
+:P.
+The number of the job that issued the lock request.
+:EHELP.
+
+:HELP name='UNDELR/C2LOCK'.
+Lock - Help
+:XH3.Lock
+:P.
+The lock condition for the request.  The possible values are:
+:PARML.
+:PT.*SHRRD
+:PD.Lock shared for read.
+:PT.*SHRUPD
+:PD.Lock shared for update.
+:PT.*SHRNUP
+:PD.Lock shared no update.
+:PT.*EXCLRD
+:PD.Lock exclusive allow read.
+:PT.*EXCL
+:PD.Lock exclusive no read.
+:EPARML.
+:EHELP.
+
+:HELP name='UNDELR/C2FKYS'.
+Function keys - Help
+:XH3.Function keys
+:PARML.
+:PT.F12=Cancel
+:PD.Returns to the previous screen.
+:EPARML.
+:EHELP.
+:EPNLGRP.

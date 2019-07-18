@@ -1,0 +1,177 @@
+/*  Module: UNDEL2C - CL functions for UNDEL2R                     */
+
+             PGM        PARM(&OP &RETC &FILE &LIBR &MBR &ACTRCD &DLTRCD +
+                             &OFILE &OLIBR &OMBR &REPLAC &CALLPGM +
+                             &CURLIB &SYSNAME &JOBTYPE &PARMS2C)
+             DCL        VAR(&OP) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&RETC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBR)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ACTRCD) TYPE(*DEC) LEN(9 0)
+             DCL        VAR(&DLTRCD) TYPE(*DEC) LEN(9 0)
+             DCL        VAR(&OFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OLIBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OMBR)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&REPLAC) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&CALLPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CURLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSNAME) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PARMS2C) TYPE(*CHAR) LEN(26)
+
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&NBRDLTRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNMBR) TYPE(*CHAR) LEN(6)
+
+             DCL        &ERRORSW *LGL                     /* Std err */
+             DCL        &EMSGID *CHAR LEN(7)              /* Std err */
+             DCL        &EMSGDTA *CHAR LEN(100)           /* Std err */
+             DCL        &EMSGF *CHAR LEN(10)              /* Std err */
+             DCL        &EMSGFLIB *CHAR LEN(10)           /* Std err */
+
+             MONMSG     MSGID(CPF0000) EXEC(GOTO STDERR1) /* Std err */
+
+             CHGVAR     VAR(&RETC) VALUE(' ')
+             IF         COND(&OP *EQ 'SYSNAME ') THEN(GOTO OPSYSNAME)
+             IF         COND(&OP *EQ 'RTVMBRD ') THEN(GOTO OPRTVM)
+             IF         COND(&OP *EQ 'CKOUTF  ') THEN(GOTO OPCKOUTF)
+             IF         COND(&OP *EQ 'CRTOUTF ') THEN(GOTO OPCRTOUTF)
+             IF         COND(&OP *EQ 'WRKJOB  ') THEN(GOTO OPWRKJOB)
+             IF         COND(&OP *EQ 'WRKJOBLK') THEN(GOTO OPWRKJOBLK)
+             IF         COND(&OP *EQ 'WRKJOBOF') THEN(GOTO OPWRKJOBOF)
+             GOTO       CMDLBL(ENDPGM)
+/*-------------------------------------------------------------------*/
+OPSYSNAME:
+/*  OP = SYSNAME - Get system data                                   */
+             RTVNETA    SYSNAME(&SYSNAME)
+             RTVJOBA    TYPE(&JOBTYPE) CURLIB(&CURLIB)
+             GOTO       CMDLBL(ENDPGM)
+/*-------------------------------------------------------------------*/
+OPRTVM:
+/*  OP = RTVMBRD - retrieve member desc                              */
+             CHGVAR     VAR(&ACTRCD) VALUE(0)
+             CHGVAR     VAR(&DLTRCD) VALUE(0)
+             RTVMBRD    FILE(&LIBR/&FILE) MBR(&MBR) +
+                          NBRCURRCD(&NBRCURRCD) NBRDLTRCD(&NBRDLTRCD)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ENDPGM))
+             CHGVAR     VAR(&ACTRCD) VALUE(&NBRCURRCD)
+             CHGVAR     VAR(&DLTRCD) VALUE(&NBRDLTRCD)
+             GOTO       CMDLBL(ENDPGM)
+/*-------------------------------------------------------------------*/
+OPCKOUTF:
+/*  OP = CKOUTF - Check existence of outfile (& infile)             */
+             RTVJOBA    CURLIB(&CURLIB)
+             IF         COND(&OLIBR *EQ *CURLIB) THEN(DO)
+               IF         COND(&CURLIB *EQ *NONE) THEN(CHGVAR +
+                            VAR(&OLIBR) VALUE(QGPL))
+               ELSE       CMD(CHGVAR VAR(&OLIBR) VALUE(&CURLIB))
+             ENDDO      /* &libr = *curlib */
+
+/*  check infile                                                    */
+             CHKOBJ     OBJ(&LIBR/&FILE) OBJTYPE(*FILE) MBR(&MBR) +
+                          AUT(*USE)
+/*  check outfile                                                   */
+             CHKOBJ     OBJ(&OLIBR/&OFILE) OBJTYPE(*FILE) MBR(&OMBR) +
+                          AUT(*CHANGE)
+             MONMSG     MSGID(CPF9801) EXEC(DO) /* File not found */
+               CHGVAR     VAR(&RETC) VALUE('OFILENF')
+             ENDDO      /* cpf9801 */
+             MONMSG     MSGID(CPF9815) EXEC(DO) /* Mbr not found */
+               CHGVAR     VAR(&RETC) VALUE('OMBRNF')
+             ENDDO      /* cpf9815 */
+
+  /*  get mbr name if *FIRST  */
+             IF         COND(&RETC *EQ ' ') THEN(DO)
+               IF         COND(&OMBR *EQ *FIRST) THEN(DO)
+                 RTVMBRD    FILE(&OLIBR/&OFILE) MBR(*FIRST) RTNMBR(&OMBR)
+               ENDDO      /* ombr = *first */
+             ENDDO      /* retc = ' ' */
+
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+OPCRTOUTF:
+/*  OP = CRTOUTF - Create outfile or 'mbr, as needed                 */
+             CHKOBJ     OBJ(&OLIBR/&OFILE) OBJTYPE(*FILE) MBR(&OMBR) +
+                          AUT(*CHANGE)
+
+     /* if file not found, create it  */
+             MONMSG     MSGID(CPF9801) EXEC(DO) /* File not found */
+               CPYF       FROMFILE(&LIBR/&FILE) TOFILE(&OLIBR/&OFILE) +
+                            CRTFILE(*YES) NBRRCDS(1)
+               RMVM       FILE(&OLIBR/&OFILE) MBR(*ALL)
+               IF         COND(&OMBR = *FIRST) THEN(CHGVAR VAR(&OMBR) +
+                            VALUE(&OFILE))
+               ADDPFM     FILE(&OLIBR/&OFILE) MBR(&OMBR)
+             ENDDO      /* CPF9801 */
+
+     /* if mbr not found, add it  */
+             MONMSG     MSGID(CPF9815) EXEC(DO) /* Mbr not found */
+               IF         COND(&OMBR = *FIRST) THEN(CHGVAR VAR(&OMBR) +
+                            VALUE(&OFILE))
+               ADDPFM     FILE(&OLIBR/&OFILE) MBR(&OMBR)
+             ENDDO      /* CPF9815 */
+
+     /* here if lib, file & mbr exist (now)    */
+
+     /* if *REPLACE, clear mbr    */
+             IF         COND(&REPLAC = *REPLACE) THEN(CLRPFM +
+                          FILE(&OLIBR/&OFILE) MBR(&OMBR))
+
+             CHGVAR     VAR(&RETC) VALUE('GOOD')
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+OPWRKJOB:
+/*  OP = WRKJOB - Work with job                                    */
+             CHGVAR     VAR(&JOBNAME) VALUE(%SST(&PARMS2C  1 10))
+             CHGVAR     VAR(&JOBUSER) VALUE(%SST(&PARMS2C 11 10))
+             CHGVAR     VAR(&JOBNMBR) VALUE(%SST(&PARMS2C 21 6))
+             WRKJOB     JOB(&JOBNMBR/&JOBUSER/&JOBNAME)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+               RCVMSG     MSGTYPE(*EXCP)
+             ENDDO
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+OPWRKJOBLK:
+/*  OP = WRKJOBLK - Work with job locks                            */
+             CHGVAR     VAR(&JOBNAME) VALUE(%SST(&PARMS2C  1 10))
+             CHGVAR     VAR(&JOBUSER) VALUE(%SST(&PARMS2C 11 10))
+             CHGVAR     VAR(&JOBNMBR) VALUE(%SST(&PARMS2C 21 6))
+             WRKJOB     JOB(&JOBNMBR/&JOBUSER/&JOBNAME) OPTION(*JOBLCK)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+               RCVMSG     MSGTYPE(*EXCP)
+             ENDDO
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+OPWRKJOBOF:
+/*  OP = WRKJOBOF - Work with job open files                       */
+             CHGVAR     VAR(&JOBNAME) VALUE(%SST(&PARMS2C  1 10))
+             CHGVAR     VAR(&JOBUSER) VALUE(%SST(&PARMS2C 11 10))
+             CHGVAR     VAR(&JOBNMBR) VALUE(%SST(&PARMS2C 21 6))
+             WRKJOB     JOB(&JOBNMBR/&JOBUSER/&JOBNAME) OPTION(*OPNF)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+               RCVMSG     MSGTYPE(*EXCP)
+             ENDDO
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+ STDERR1:               /* Standard error handling routine */
+             IF         &ERRORSW SNDPGMMSG MSGID(CPF9999) +
+                          MSGF(QCPFMSG) MSGTYPE(*ESCAPE) /* Func chk */
+             CHGVAR     &ERRORSW '1' /* Set to fail if error occurs */
+ STDERR2:    RCVMSG     MSGTYPE(*DIAG) MSGDTA(&EMSGDTA) MSGID(&EMSGID) +
+                          MSGF(&EMSGF) MSGFLIB(&EMSGFLIB)
+             IF         (&EMSGID *EQ '       ') GOTO STDERR3
+             SNDPGMMSG  MSGID(&EMSGID) MSGF(&EMSGFLIB/&EMSGF) +
+                          MSGDTA(&EMSGDTA) TOPGMQ(*PRV &CALLPGM) +
+                          MSGTYPE(*DIAG)
+             GOTO       STDERR2 /* Loop back for addl diagnostics */
+ STDERR3:    RCVMSG     MSGTYPE(*EXCP) MSGDTA(&EMSGDTA) MSGID(&EMSGID) +
+                          MSGF(&EMSGF) MSGFLIB(&EMSGFLIB)
+             SNDPGMMSG  MSGID(&EMSGID) MSGF(&EMSGFLIB/&EMSGF) +
+                          MSGDTA(&EMSGDTA) TOPGMQ(*PRV &CALLPGM) +
+                          MSGTYPE(*ESCAPE)
+/*-----------------------------------------------------------------*/
+ENDPGM:
+             ENDPGM

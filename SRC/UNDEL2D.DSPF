@@ -1,0 +1,211 @@
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      PRINT
+     A                                      INDARA
+     A                                      ALTHELP(CA01)
+     A*----------------
+     A          R UNDELS1                   SFL
+     A            DPOS           5Y 0O  8 15EDTCDE(1)
+     A            DDATA         52A  O  8 23
+     A*----------------
+     A          R UNDELC1                   SFLCTL(UNDELS1)
+     A                                      SFLSIZ(0014)
+     A                                      SFLPAG(0014)
+     A                                      OVERLAY
+     A N20                                  SFLCLR
+     A  20                                  SFLDSPCTL
+     A  21                                  SFLDSP
+     A                                      CA03
+     A                                      CA12
+     A                                      CF19
+     A                                      CF20
+     A                                      CF23
+     A                                      ROLLUP(92 'Read Forward')
+     A                                      ROLLDOWN(93 'Read Back')
+     A                                      HELP
+     A                                      BLINK
+     A                                      HLPTITLE('Un-delete Record')
+     A          H                           HLPPNLGRP('UNDELR/HELP'    UNDEL2DU)
+     A                                      HLPARA(*NONE)
+     A          H                           HLPPNLGRP('UNDELR/FILE'    UNDEL2DU)
+     A                                      HLPARA(03 001 03 028)
+     A          H                           HLPPNLGRP('UNDELR/RRN'     UNDEL2DU)
+     A                                      HLPARA(03 029 03 047)
+     A          H                           HLPPNLGRP('UNDELR/STATUS'  UNDEL2DU)
+     A                                      HLPARA(03 048 03 059)
+     A          H                           HLPPNLGRP('UNDELR/BAKSTAT' UNDEL2DU)
+     A                                      HLPARA(03 060 03 080)
+     A          H                           HLPPNLGRP('UNDELR/LIBRARY' UNDEL2DU)
+     A                                      HLPARA(04 001 04 028)
+     A          H                           HLPPNLGRP('UNDELR/ACTRECS' UNDEL2DU)
+     A                                      HLPARA(04 029 04 080)
+     A          H                           HLPPNLGRP('UNDELR/MBR'     UNDEL2DU)
+     A                                      HLPARA(05 001 05 028)
+     A          H                           HLPPNLGRP('UNDELR/DELRECS' UNDEL2DU)
+     A                                      HLPARA(05 029 05 080)
+     A          H                           HLPPNLGRP('UNDELR/POSIT'   UNDEL2DU)
+     A                                      HLPARA(07 001 07 021)
+     A          H                           HLPPNLGRP('UNDELR/DATA'    UNDEL2DU)
+     A                                      HLPARA(07 022 07 080)
+     A          H                           HLPPNLGRP('UNDELR/DATA'    UNDEL2DU)
+     A                                      HLPARA(08 001 22 080)
+     A          H                           HLPPNLGRP('UNDELR/FKEYS'   UNDEL2DU)
+     A                                      HLPARA(23 001 23 080)
+     A            DVERS          8A  O  1  2
+     A                                  1 32'Un-delete Record'
+     A                                      DSPATR(HI)
+     A                                  1 72SYSNAME
+     A                                  2 62DATE
+     A                                      EDTCDE(Y)
+     A                                  2 72TIME
+     A                                  3  2'Physical file:'
+     A            DFILE         10A  B  3 17
+     A  30                                  DSPATR(PC)
+     A                                  3 31'RRN:'
+     A            DRRN           9Y 0B  3 36EDTCDE(2)
+     A  31                                  DSPATR(PC)
+     A            DSTAT          7A  O  3 49DSPATR(HI)
+     A            BLABEL         7A  O  3 61
+     A            BSTAT          7A  O  3 69DSPATR(HI)
+     A                                  4  2'      Library:'
+     A            DLIBR         10A  B  4 17
+     A            DACTRC         9Y 0O  4 36EDTCDE(1)
+     A                                  4 49'Active recs'
+     A                                  5  9'Member:'
+     A            DMBR          10A  B  5 17
+     A            DDELRC         9Y 0O  5 36EDTCDE(1)
+     A                                  5 49'Deleted recs'
+     A                                  7  2'Position to:'
+     A            DPOSIT         5Y 0B  7 15EDTCDE(1)
+     A                                  7 24'1...+...10....+...20....+...30....-
+     A                                      +...40....+...50'
+     A*-------------------
+     A          R UNDELDF1
+     A            DMORE          7A  O 22 73
+     A                                 23  2'F3=Exit'
+     A                                       COLOR(BLU)
+     A                                 23 12'F19=Prior deleted rec'
+     A                                       COLOR(BLU)
+     A                                 23 36'F20=Next deleted rec'
+     A                                       COLOR(BLU)
+     A                                 23 59'F23=Un-delete'
+     A                                       COLOR(BLU)
+     A*-------------------
+     A          R MSGSFL                    SFL SFLMSGRCD(24)
+     A            FLDKEY                    SFLMSGKEY
+     A            FLDPGM                    SFLPGMQ
+      *
+     A          R MSGSFLC                   SFLCTL(MSGSFL)
+     A                                      OVERLAY
+     A                                      BLINK
+     A N95                                  SFLCLR
+     A  95                                  SFLDSPCTL
+     A  96                                  SFLDSP
+     A                                      SFLPAG(1)
+     A                                      SFLSIZ(3)
+     A*-------------------
+     A          R UNDELW1                   WINDOW(7 15 14 61)
+     A                                      OVERLAY
+     A                                      CA03
+     A                                      CA06
+     A                                      CA12
+     A                                      HELP
+     A                                      HLPTITLE('Member Data Locked')
+     A          H                           HLPPNLGRP('UNDELR/LOCKED'  UNDEL2DU)
+     A                                      HLPARA(01 001 12 061)
+     A          H                           HLPPNLGRP('UNDELR/LKFKYS'  UNDEL2DU)
+     A                                      HLPARA(13 001 14 061)
+     A                                  1 21'Member Data Locked'
+     A                                      DSPATR(HI)
+     A                                  3  2'Another job is holding a *SHRN-
+     A                                      UP, *SHRUPD, *EXCLRD or *EXCL '
+     A                                  4  2'member data lock.  While the l-
+     A                                      ock is held, retrieved deleted'
+     A                                  5  2'records will contain default v-
+     A                                      alues (blanks or zeros).  The '
+     A                                  6  2'lock could be held by a job th-
+     A                                      at has the file open for      '
+     A                                  7  2'update.                       -
+     A                                                                    '
+      *
+     A                                  9  2'To retrieve the actual data in-
+     A                                       deleted records, wait until  '
+     A                                 10  2'no such lock is held, or use t-
+     A                                      he BAKFILE command paremeter  '
+     A                                 11  2'to get records from a backup f-
+     A                                      ile.                          '
+      *
+     A                                 13  2'F6=Display locks'
+     A                                       COLOR(BLU)
+     A                                 13 21'F12=Cancel'
+     A                                       COLOR(BLU)
+     A*----------------
+     A          R UNDELS2                   SFL
+     A            SELBAR         1A  B  9  3
+     A            JOBNAM        10A  O  9  7
+     A            JOBUSR        10A  O  9 19
+     A            JOBNUM         6A  O  9 31
+     A            LCKTYPE        7A  O  9 39
+     A*----------------
+     A          R UNDELC2                   SFLCTL(UNDELS2)
+     A                                      SFLSIZ(0026)
+     A                                      SFLPAG(0013)
+     A                                      OVERLAY
+     A N20                                  SFLCLR
+     A  20                                  SFLDSPCTL
+     A  21                                  SFLDSP
+     A  22                                  SFLEND(*MORE)
+     A                                      CA03
+     A                                      CA12
+     A                                      HELP
+     A                                      BLINK
+     A                                      HLPTITLE('Display Data Locks')
+     A          H                           HLPPNLGRP('UNDELR/C2HELP'  UNDEL2DU)
+     A                                      HLPARA(*NONE)
+     A          H                           HLPPNLGRP('UNDELR/C2FILE'  UNDEL2DU)
+     A                                      HLPARA(03 001 03 020)
+     A          H                           HLPPNLGRP('UNDELR/C2LIBR'  UNDEL2DU)
+     A                                      HLPARA(03 021 03 043)
+     A          H                           HLPPNLGRP('UNDELR/C2MBR'   UNDEL2DU)
+     A                                      HLPARA(03 024 03 065)
+     A          H                           HLPPNLGRP('UNDELR/C2OPT'   UNDEL2DU)
+     A                                      HLPARA(08 001 20 005)
+     A          H                           HLPPNLGRP('UNDELR/C2JOB'   UNDEL2DU)
+     A                                      HLPARA(08 006 20 017)
+     A          H                           HLPPNLGRP('UNDELR/C2USER'  UNDEL2DU)
+     A                                      HLPARA(08 018 20 029)
+     A          H                           HLPPNLGRP('UNDELR/C2NUM'   UNDEL2DU)
+     A                                      HLPARA(08 030 20 037)
+     A          H                           HLPPNLGRP('UNDELR/C2LOCK'  UNDEL2DU)
+     A                                      HLPARA(08 038 20 046)
+     A          H                           HLPPNLGRP('UNDELR/C2FKYS'  UNDEL2DU)
+     A                                      HLPARA(23 001 23 080)
+     A            DVERS          8A  O  1  2
+     A                                  1 31'Display Data Locks'
+     A                                      DSPATR(HI)
+     A                                  1 72SYSNAME
+     A                                  2 62DATE
+     A                                      EDTCDE(Y)
+     A                                  2 72TIME
+     A                                  3  2'File:'
+     A            DFILE         10A  O  3  9
+     A                                  3 22'Library:'
+     A            DLIBR         10A  O  3 32
+     A                                  3 45'Member:'
+     A            DMBR          10A  O  3 54
+     A                                  5  2'Type options, press Enter.'
+     A                                       COLOR(BLU)
+     A                                  6  4'5=Work with job'
+     A                                       COLOR(BLU)
+     A                                  6 22'8=Work with locks'
+     A                                       COLOR(BLU)
+     A                                  6 42'9=Display open files'
+     A                                       COLOR(BLU)
+     A                                  8  2'Opt'         DSPATR(HI)
+     A                                  8  7'Job'         DSPATR(HI)
+     A                                  8 19'User'        DSPATR(HI)
+     A                                  8 31'Number'      DSPATR(HI)
+     A                                  8 39'Lock'        DSPATR(HI)
+     A*-------------------
+     A          R UNDELDF2
+     A                                 23  2'F12=Cancel'
+     A                                       COLOR(BLU)

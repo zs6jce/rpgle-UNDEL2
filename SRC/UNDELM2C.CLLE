@@ -1,0 +1,206 @@
+/*  Module: UNDELM2C - CL functions for UNDELM2                     */
+
+             PGM        PARM(&OP &RETC &FRMFILE &FRMLIBR &FRMMBR +
+                          &FRMRCD &NBRRCDS &CRTFILE &M2CPARMS)
+             DCL        VAR(&OP      ) TYPE(*CHAR) LEN( 8)
+             DCL        VAR(&RETC    ) TYPE(*CHAR) LEN( 8)
+             DCL        VAR(&FRMFILE ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FRMLIBR ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FRMMBR  ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FRMRCD  ) TYPE(*DEC ) LEN(9 0)
+             DCL        VAR(&NBRRCDS ) TYPE(*DEC ) LEN(9 0)
+             DCL        VAR(&CRTFILE ) TYPE(*CHAR) LEN( 4)
+             DCL        VAR(&M2CPARMS) TYPE(*CHAR) LEN(80)
+
+             DCL        VAR(&MSGDTA  ) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&MSGID   ) TYPE(*CHAR) LEN( 7)
+             DCL        VAR(&NCOPIED ) TYPE(*CHAR) LEN( 4)
+             DCL        VAR(&GOTSAVF ) TYPE(*CHAR) LEN( 1)
+             DCL        VAR(&TMPPF   ) TYPE(*CHAR) LEN(10) VALUE(UNDEL2PF)
+             DCL        VAR(&TMPSAVF ) TYPE(*CHAR) LEN(10) VALUE(UNDEL2SF)
+             DCL        VAR(&TMP528  ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TMPSRCF ) TYPE(*CHAR) LEN(10) VALUE(UNDEL2SRC)
+             DCL        VAR(&TMPLIBR ) TYPE(*CHAR) LEN(10) VALUE(QTEMP)
+
+             DCL        &ERRORSW *LGL                     /* Std err */
+             DCL        &EMSGID *CHAR LEN(7)              /* Std err */
+             DCL        &EMSGDTA *CHAR LEN(100)           /* Std err */
+             DCL        &EMSGF *CHAR LEN(10)              /* Std err */
+             DCL        &EMSGFLIB *CHAR LEN(10)           /* Std err */
+
+             MONMSG     MSGID(CPF0000 MCH0000 CEE0000) +
+                          EXEC(GOTO CMDLBL(STDERR1)) /* Std err */
+
+             CHGVAR     VAR(&RETC) VALUE(' ')
+             CHGVAR     VAR(&TMP528) VALUE(%SST(&M2CPARMS  1 10))
+             IF         COND(&OP *EQ 'CRTSRCF ') THEN(GOTO CRTSRCF)
+             IF         COND(&OP *EQ 'CPYPF   ') THEN(GOTO CPYPF)
+             IF         COND(&OP *EQ 'DLTPF   ') THEN(GOTO DLTPF)
+             IF         COND(&OP *EQ 'SAVPF   ') THEN(GOTO SAVPF)
+             IF         COND(&OP *EQ 'CLR528  ') THEN(GOTO CLR528)
+             IF         COND(&OP *EQ 'ORIDE528') THEN(GOTO ORIDE528)
+             IF         COND(&OP *EQ 'ORIDEBAK') THEN(GOTO ORIDEBAK)
+             IF         COND(&OP *EQ 'ORIDEDEL') THEN(GOTO ORIDEDEL)
+             IF         COND(&OP *EQ 'ORIDEDEO') THEN(GOTO ORIDEDEO)
+             IF         COND(&OP *EQ 'RCV2CALR') THEN(GOTO RCV2CALR)
+             IF         COND(&OP *EQ 'LOCKPF  ') THEN(GOTO LOCKPF)
+             IF         COND(&OP *EQ 'UNLOCKPF') THEN(GOTO UNLOCKPF)
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+CRTSRCF:
+/*  Create a srcf in QTEMP  */
+             OVRDBF     FILE(UNDELSRCF) TOFILE(&TMPLIBR/&TMPSRCF)
+             CRTSRCPF   FILE(&TMPLIBR/&TMPSRCF) MBR(*FILE)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+               RCVMSG     MSGTYPE(*EXCP)
+               CHGVAR     VAR(&MSGID) VALUE(' ')
+               RCVMSG     MSGTYPE(*DIAG) MSGID(&MSGID)
+               IF         COND(&MSGID = 'CPF5813') THEN(DO) /* already +
+                          exists */
+                 CLRPFM     FILE(&TMPLIBR/&TMPSRCF) MBR(*FIRST)
+                 RCVMSG     MSGTYPE(*COMP)
+               ENDDO
+               GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             RCVMSG     MSGTYPE(*COMP)
+             RCVMSG     MSGTYPE(*COMP)
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+CPYPF:
+/*  Create temp physical  */
+             IF         COND(&CRTFILE *EQ *YES) THEN(DO)
+               CRTPF      FILE(&TMPLIBR/&TMPPF) +
+                          SRCFILE(&TMPLIBR/&TMPSRCF) +
+                          SRCMBR(&TMPSRCF) OPTION(*NOLIST *NOSRC) +
+                          SIZE(*NOMAX)
+               RCVMSG     MSGTYPE(*COMP)
+               RCVMSG     MSGTYPE(*COMP)
+             ENDDO
+
+/*  Copy recs (including deleted) to temp physical  */
+             CPYF       FROMFILE(&FRMLIBR/&FRMFILE) +
+                          TOFILE(&TMPLIBR/&TMPPF) FROMMBR(&FRMMBR) +
+                          MBROPT(*REPLACE) FROMRCD(&FRMRCD) +
+                          NBRRCDS(&NBRRCDS) COMPRESS(*NO)
+             MONMSG     MSGID(CPF0000) EXEC(DO) /* error */
+               RCVMSG     MSGTYPE(*DIAG)
+               CHGVAR     VAR(&RETC) VALUE('BADMBR')
+             ENDDO
+             CHGVAR     VAR(&MSGID) VALUE(' ')
+             RCVMSG     MSGTYPE(*COMP) MSGDTA(&MSGDTA) MSGID(&MSGID)
+             IF         COND(&MSGID = 'CPC2956') THEN(DO)
+               CHGVAR     VAR(&NCOPIED) VALUE(%SST(&MSGDTA 75 4))
+               CHGVAR     VAR(&NBRRCDS) VALUE(%BIN(&NCOPIED))
+               CHGVAR     VAR(&FRMMBR) VALUE(%SST(&MSGDTA 21 10))
+             ENDDO
+             IF         COND(&MSGID = 'CPC2957') THEN(DO)
+               CHGVAR     VAR(&NBRRCDS) VALUE(0)
+             ENDDO
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+DLTPF:
+/*  Delete temporary physical  */
+             DLTF       FILE(&TMPLIBR/&TMPPF)
+             RCVMSG     MSGTYPE(*COMP)
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+SAVPF:
+/*  Save the temporary physical  */
+             CHGVAR     VAR(&GOTSAVF) VALUE(Y)
+             CHKOBJ     OBJ(&TMPLIBR/&TMPSAVF) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO) /* not found */
+               RCVMSG     MSGTYPE(*EXCP)
+               CRTSAVF    FILE(&TMPLIBR/&TMPSAVF)
+               RCVMSG     MSGTYPE(*COMP)
+               CHGVAR     VAR(&GOTSAVF) VALUE(N)
+             ENDDO
+             IF         COND(&GOTSAVF = Y) THEN(DO)
+               CLRSAVF    FILE(&TMPLIBR/&TMPSAVF)
+               RCVMSG     MSGTYPE(*COMP)
+             ENDDO
+             SAVOBJ     OBJ(&TMPPF) LIB(&TMPLIBR) DEV(*SAVF) +
+                          OBJTYPE(*FILE) SAVF(&TMPLIBR/&TMPSAVF) +
+                          OUTPUT(*NONE)
+             RCVMSG     MSGTYPE(*COMP)
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+CLR528:
+/*  Clear (or create) the 528-byte physical  */
+             CLRPFM     FILE(&TMPLIBR/&TMP528)
+             MONMSG     MSGID(CPF3142) EXEC(DO) /* not found */
+               RCVMSG     MSGTYPE(*EXCP)
+               CRTPF      FILE(&TMPLIBR/&TMP528) RCDLEN(528) SIZE(*NOMAX)
+               RCVMSG     MSGTYPE(*COMP)
+             ENDDO
+             RCVMSG     MSGTYPE(*COMP)
+
+/*  Override SAVF528 to savf, and UNDEL528O to physical  */
+             OVRSAVF    FILE(SAVF528) TOFILE(&TMPLIBR/&TMPSAVF)
+             OVRDBF     FILE(UNDEL528O) TOFILE(&TMPLIBR/&TMP528)
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+ORIDE528:
+/*  Override UNDEL528 to physical  */
+             OVRDBF     FILE(UNDEL528) TOFILE(&TMPLIBR/&TMP528)
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+ORIDEBAK:
+/*  Override UNDEL528B to physical  */
+             OVRDBF     FILE(UNDEL528B) TOFILE(&TMPLIBR/&TMP528)
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+ORIDEDEL:
+/*  Override DELFILE to original physical  */
+             OVRDBF     FILE(DELFILE) TOFILE(&FRMLIBR/&FRMFILE) +
+                          MBR(&FRMMBR)
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+ORIDEDEO:
+/*  Override DELFILE to original physical  */
+             OVRDBF     FILE(DELFILO) TOFILE(&FRMLIBR/&FRMFILE) +
+                          MBR(&FRMMBR)
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+RCV2CALR:
+/*  Receive msg to caller  */
+             RCVMSG     PGMQ(*PRV) MSGTYPE(*DIAG)
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+LOCKPF:
+/*  Lock the physical file  */
+             ALCOBJ     OBJ((&FRMLIBR/&FRMFILE *FILE *EXCLRD +
+                          &FRMMBR)) WAIT(0)
+             MONMSG     MSGID(CPF0000) EXEC(DO) /* error */
+               RCVMSG     MSGTYPE(*EXCP)
+               CHGVAR     VAR(&RETC) VALUE('NOLOCK')
+             ENDDO
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+UNLOCKPF:
+/*  Unlock the physical file  */
+             DLCOBJ     OBJ((&FRMLIBR/&FRMFILE *FILE *EXCLRD &FRMMBR))
+             MONMSG     MSGID(CPF0000) EXEC(DO) /* error */
+               RCVMSG     MSGTYPE(*EXCP)
+               CHGVAR     VAR(&RETC) VALUE('NOUNLK')
+             ENDDO
+             GOTO       CMDLBL(ENDPGM)
+/*-----------------------------------------------------------------*/
+ STDERR1:               /* Standard error handling routine */
+             IF         &ERRORSW SNDPGMMSG MSGID(CPF9999) +
+                          MSGF(QCPFMSG) MSGTYPE(*ESCAPE) /* Func chk */
+             CHGVAR     &ERRORSW '1' /* Set to fail if error occurs */
+ STDERR2:    RCVMSG     MSGTYPE(*DIAG) MSGDTA(&EMSGDTA) MSGID(&EMSGID) +
+                          MSGF(&EMSGF) MSGFLIB(&EMSGFLIB)
+             IF         (&EMSGID *EQ '       ') GOTO STDERR3
+             SNDPGMMSG  MSGID(&EMSGID) MSGF(&EMSGFLIB/&EMSGF) +
+                          MSGDTA(&EMSGDTA) TOPGMQ(*PRV *) +
+                          MSGTYPE(*DIAG)
+             GOTO       STDERR2 /* Loop back for addl diagnostics */
+ STDERR3:    RCVMSG     MSGTYPE(*EXCP) MSGDTA(&EMSGDTA) MSGID(&EMSGID) +
+                          MSGF(&EMSGF) MSGFLIB(&EMSGFLIB)
+             SNDPGMMSG  MSGID(&EMSGID) MSGF(&EMSGFLIB/&EMSGF) +
+                          MSGDTA(&EMSGDTA) TOPGMQ(*PRV *) +
+                          MSGTYPE(*ESCAPE)
+/*-----------------------------------------------------------------*/
+ENDPGM:
+             ENDPGM
